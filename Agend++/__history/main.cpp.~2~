@@ -1,0 +1,241 @@
+﻿#include<iostream>
+#include<mysql.h>
+#include<mysql_error.h>
+#include<locale.h>
+#include <tchar.h>
+
+using namespace std;
+	class conne{
+
+		public:
+		MYSQL *obj;
+
+		char* conectar(char *server, char *user, char *pw, char *database){
+
+				if(!(obj=mysql_init(0)))
+					{
+						return "Error Create Objeto";
+					}
+					if(!mysql_real_connect(obj,server,user,pw,database,3306,NULL,0))
+					{
+						return (char*)mysql_error(obj);
+					}else
+					{
+						return "++++++++ Base de Datos en Uso ++++++++";
+					}
+		}
+
+		void desconectar(){
+			mysql_close(obj);
+		}
+	};
+
+	conne conexion;
+
+	struct agenda{
+	char id[6];
+	char nombre[20];
+	char telefono[20];
+	char email[60];
+	char empresa[20];
+	char cargo[20];
+	}agenda;
+
+	class claagenda{
+		public:
+			char *resultado;
+			void insertar(struct agenda x){
+				try{
+				conexion.conectar("localhost","root","","Single");
+				char *consulta;
+				char sentencia[]="INSERT INTO AGENDA (ID,NOMBRE,TELEFONO,EMAIL,EMPRESA,CARGO) VALUES (\'%s\',\'%s\',\'%s\')";
+				consulta=new char[strlen(sentencia)+sizeof(agenda)]-sizeof(int);
+				sprintf(consulta,sentencia,agenda.id,agenda.nombre,agenda.telefono,agenda.email,agenda.empresa,agenda.cargo);
+				int aux=mysql_query(conexion.obj,consulta);
+				if(!aux==0){
+					throw mysql_error(conexion.obj);
+				}
+				resultado="Registro Ingresado Correctamente\n";
+				}catch(const char* msg){
+					cout<<msg;
+					conexion.desconectar();
+				}
+			}
+
+			void modificar(struct agenda x){
+				try{
+				conexion.conectar("localhost","root","","Single");
+				char *consulta;
+				char sentencia[]="UPDATE AGENDA SET NOMBRE=\'%s\',TELEFONO=\'%s\',EMAIL=\'%s\' ,EMPRESA=\'%s\',CARGO=\'%s\' wHERE ID=\'%s\'";
+				consulta=new char[strlen(sentencia)+sizeof(agenda)]-sizeof(int);
+				sprintf(consulta,sentencia,agenda.nombre,agenda.telefono,agenda.email,agenda.empresa,agenda.cargo,agenda.id);
+				int aux=mysql_query(conexion.obj,consulta);
+				if(!aux==0){
+					throw mysql_error(conexion.obj);
+				}
+				resultado="Registro Modificado\n";
+				}catch(const char* msg){
+					cout<<msg;
+					conexion.desconectar();
+				}
+			}
+
+			void eliminar(struct agenda x){
+				try{
+				conexion.conectar("localhost","root","","Single");
+				char *consulta;
+				char sentencia[]="DELETE from AGENDA WHERE ID=\'%s\'";
+				consulta=new char[strlen(sentencia)+sizeof(agenda)]-sizeof(int);
+				sprintf(consulta,sentencia,agenda.id);
+				int aux=mysql_query(conexion.obj,consulta);
+				if(!aux==0){
+					throw mysql_error(conexion.obj);
+				}
+				resultado="Registro ELiminado Correctamente\n";
+				}catch(const char* msg){
+					cout<<msg;
+					conexion.desconectar();
+				}
+			}
+
+			void mostrar(){
+				   MYSQL           *objDatos;
+				   MYSQL_RES       *res;
+				   MYSQL_ROW        row;
+				   MYSQL_FIELD     *columna;
+				   int              i, j, k, l;
+				   unsigned long   *lon;
+				   MYSQL_ROW_OFFSET pos;
+				   if(!(objDatos = mysql_init(0))) {
+				      cout<<"Error Objeto"<<endl;
+				      rewind(stdin);
+				      getchar();
+					}
+				   if(!mysql_real_connect(objDatos,"localhost", "root", "", "Single", 3306, NULL, 0)) {
+				      cout<<"Error BD"<<MYSQL_PORT<<" Error: "<<mysql_error(objDatos)<<endl;
+				      mysql_close(objDatos);
+				      rewind(stdin);
+				      getchar();
+				   }
+				   if(mysql_select_db(objDatos, "Single")) {
+				      cout<<mysql_error(objDatos)<<endl;
+				      mysql_close(objDatos);
+				      rewind(stdin);
+				      getchar();
+				   }
+				   if(mysql_query(objDatos, "SELECT * FROM AGENDA")) {
+				      cout<<mysql_error(objDatos)<<endl;
+				      mysql_close(objDatos);
+				      rewind(stdin);
+				      getchar();
+				   }
+				if((res=mysql_store_result(objDatos))){
+					i=(int)mysql_num_rows(res);
+					j=(int)mysql_num_fields(res);
+					cout<<endl<<"		Datos de Todos Las agendas"<<endl;
+					l=1;
+					for(l=0;l<i;l++){
+						row=mysql_fetch_row(res);
+						lon=mysql_fetch_lengths(res);
+						cout<<endl;
+						for(k=0;k<j;k++){
+						cout<<"	"<<((row[k]==NULL)?"NULL":row[k])<<"	";
+					}
+				}cout<<endl;
+			    mysql_free_result(res);
+			   }
+			   mysql_close(objDatos);
+			   rewind(stdin);
+			   cout<<endl;
+			}
+
+	};
+
+	void salir(){
+		cout<<"Programa Finalizado\n";
+	}
+
+	void menu(){
+		int opcion;
+		claagenda op;
+		cout<<"Iniciando app\n";
+		do{
+		cout<<"*************************************************************\n";
+		cout<<"                  +------------------------+"<<endl;
+		cout<<"                  |          Menu          |"<<endl;
+		cout<<"                  +------------------------+"<<endl;
+		cout<<"                  | Seleccione una Opci�n  |"<<endl;
+		cout<<"                  | 1.- Crear Registros    |"<<endl;
+		cout<<"                  | 2.- Eliminar Registros |"<<endl;
+		cout<<"                  | 3.- Modificar Registros|"<<endl;
+		cout<<"                  | 4.- Ver Registros      |"<<endl;
+		cout<<"                  | 5.- Salir              |"<<endl;
+		cout<<"                  +------------------------+"<<endl;
+		cout<<"*************************************************************"<<endl;
+
+		claagenda x;
+		cin>>opcion;
+
+		switch(opcion){
+				case 1:
+					cout<<"Ingrese Datos del contacto \n";
+					cout<<"Ingrese ID : ";
+					cin>>agenda.id;
+					cout<<"Ingrese Nombre: ";
+					cin>>agenda.nombre;
+					cout<<"Ingrese telefono: ";
+					cin>>agenda.telefono;
+					cout<<"Ingrese email: ";
+					cin>>agenda.email;
+					cout<<"Ingrese empresa: ";
+					cin>>agenda.empresa;
+					cout<<"Ingrese cargo empresa: ";
+					cin>>agenda.email;
+					op.insertar(agenda);
+					cout<<op.resultado;
+				break;
+
+				case 2:
+					claagenda op;
+					cout<<"Ingrese C�digo de contacto a Eliminar: ";
+					cin>>agenda.id;
+					op.eliminar(agenda);
+					cout<<op.resultado;
+				break;
+
+				case 3:
+					cout<<"Ingrese ID : ";
+					cin>>agenda.id;
+					cout<<"Ingrese Nombre: ";
+					cin>>agenda.nombre;
+					cout<<"Ingrese telefono: ";
+					cin>>agenda.telefono;
+					cout<<"Ingrese email: ";
+					cin>>agenda.email;
+					cout<<"Ingrese empresa: ";
+					cin>>agenda.empresa;
+					cout<<"Ingrese cargo empresa: ";
+					cin>>agenda.email;
+					op.modificar(agenda);
+					cout<<op.resultado;
+				break;
+
+				case 4:
+					op.mostrar();
+
+				break;
+				case 5: salir();
+				break;
+				default:
+				cout<<"Opci�n Incorrecta\n";
+		}
+	}while(opcion!=5);
+	}
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+	setlocale(LC_CTYPE,"Spanish");
+	menu();
+	return 0;
+}
+
